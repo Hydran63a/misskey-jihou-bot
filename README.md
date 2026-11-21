@@ -188,3 +188,9 @@ error-kanshi-bot/
 ## ライセンス
 
 [Apache License 2.0](LICENSE)
+
+##　このコードについて
+
+このコードはChatGPTで生成したものを、人間の目でチェックしてから、Claudeで修正したものです。
+
+
