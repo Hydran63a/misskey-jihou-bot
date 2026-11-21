@@ -1,4 +1,4 @@
-# jihou-bots
+# misskey-jihou-bot
 
 Misskey 向けの **時報bot** と、そのお供の **Gemini API 監視bot** です。
 
