@@ -4,6 +4,7 @@ const { TIMEZONE } = require("../config");
 const { character, formatHourlyHeader } = require("../character");
 const { getNow, getTimeBand } = require("../lib/time");
 const { checkCalendarText } = require("../lib/calendar");
+const { checkMoonText } = require("../lib/moon");
 const { generateText } = require("../ai/gemini");
 const { composePost, formatPreviousPosts } = require("../ai/compose");
 const {
@@ -186,6 +187,11 @@ async function generateHourlyMessage(now, meal, previousPosts) {
 
   if (allowCalendar) console.log("hourly: 暦の話あり");
 
+  // 月の満ち欠けは、話題の候補が月のときだけ話してよい
+  let allowMoon = Boolean(topic && topic.includes("月"));
+
+  if (allowMoon) console.log("hourly: 月の話あり");
+
   const task = `通常の時報。
 現在日時：${now.dateLabel} ${now.time}（${TIMEZONE}）
 
@@ -205,19 +211,24 @@ ${meal.rule}`;
     const text = await composePost(
       task,
       formatPreviousPosts("過去の時報です", previousPosts),
-      { allowCalendar }
+      { allowCalendar, allowMoon }
     );
 
-    const problem = checkCalendarText(text, now.dateKey, allowCalendar);
+    const problem = checkCalendarText(text, now.dateKey, allowCalendar)
+      || checkMoonText(text, now.dateKey, now.hour, allowMoon);
 
     if (!problem) return text;
 
-    console.log(`hourly: 暦の誤りで作り直し（${problem}）`);
+    console.log(`hourly: 暦・月の誤りで作り直し（${problem}）`);
 
-    if (attempt === CALENDAR_CHECK_RETRIES - 1) allowCalendar = false;
+    // 最後の1回は、暦と月の話をやめて作り直す
+    if (attempt === CALENDAR_CHECK_RETRIES - 1) {
+      allowCalendar = false;
+      allowMoon = false;
+    }
   }
 
-  throw new Error("暦の誤りを直せませんでした");
+  throw new Error("暦・月の誤りを直せませんでした");
 }
 
 // 記念日紹介（重複して生成できなければ null）

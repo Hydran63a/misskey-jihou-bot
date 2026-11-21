@@ -5,6 +5,7 @@ const { character } = require("../character");
 const { generateText } = require("./gemini");
 const { getNow } = require("../lib/time");
 const { formatCalendar } = require("../lib/calendar");
+const { formatMoon } = require("../lib/moon");
 
 // 話しかける相手の情報（OWNER_NAMEが未設定なら名前を呼ばない）
 function getOwnerSection() {
@@ -48,17 +49,30 @@ const CALENDAR_RULES = {
   deny: "・二十四節気や七十二候の名前は出さない"
 };
 
+// 月の扱い方（暦と同じ考え方。話さない回は月のデータを渡さない）
+const MOON_RULES = {
+  allow: "・今回は月の話をしてよい。月の形や見え方に触れるときは【今夜の月】の内容だけを使う",
+  deny: "・月の形（満月・三日月・半月など）や満ち欠けには触れない"
+};
+
 // task: 今回の投稿の目的とルール / details: 参考情報（過去の投稿など）
 // options.allowCalendar: true なら暦（二十四節気・七十二候）の話をしてよい
+// options.allowMoon    : true なら月の満ち欠けの話をしてよい
 async function composePost(task, details = "", options = {}) {
+  const now = getNow();
   const calendarRule = options.allowCalendar ? CALENDAR_RULES.allow : CALENDAR_RULES.deny;
+  const moonSection = options.allowMoon
+    ? `${formatMoon(now.dateKey, now.hour)}\n${MOON_RULES.allow}`
+    : MOON_RULES.deny;
 
   const prompt = `${character.getPersonality()}
 
 ${getOwnerSection()}
 
-${formatCalendar(getNow().dateKey, { detail: Boolean(options.allowCalendar) })}
+${formatCalendar(now.dateKey, { detail: Boolean(options.allowCalendar) })}
 ${calendarRule}
+
+${moonSection}
 
 【今回の投稿目的】
 ${task}
