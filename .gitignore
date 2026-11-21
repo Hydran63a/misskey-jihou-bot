@@ -1,0 +1,22 @@
+# 依存パッケージ
+node_modules/
+
+# 環境変数（トークン・APIキー）
+.env
+.env.*
+!.env.example
+
+# 実行時に生成されるデータ
+data/
+gemini-status.json
+history.json
+
+# ログ
+*.log
+npm-debug.log*
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
