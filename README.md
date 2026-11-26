@@ -136,6 +136,7 @@ characters/my-chara/
   "hourlyHeader": "🕰️ {time}になりました。",
   "hourlyMotif": "暦や季節の移ろいなど、こよみらしい視点を自然に取り入れる。",
   "anniversaryTone": "穏やかな丁寧語",
+  "mealStyles": ["和食", "洋食", "中華"],
   "topics": {
     "morning": ["朝の空気や光の感じ", "..."],
     "daytime": ["散歩の途中で見つけた景色", "..."],
@@ -151,6 +152,7 @@ characters/my-chara/
 | `hourlyHeader` | 時報の1行目。`{time}` が時刻（例：`07:00`）に置き換わる |
 | `hourlyMotif` | 時報に取り入れてほしいキャラクターらしさ |
 | `anniversaryTone` | 記念日紹介の口調 |
+| `mealStyles` | 献立のジャンルの候補（省略時は和食・洋食・中華）。毎食ここからランダムに選ばれる。`["和食", "和食", "洋食"]` のように同じジャンルを並べると出やすくなる |
 | `topics` | 時間帯ごとの話題の候補。毎回ここからランダムに1つ選ばれる（朝 5〜10時 / 昼 11〜15時 / 夕方 16〜19時 / 夜 20〜4時） |
 
 ### fallbacks.json

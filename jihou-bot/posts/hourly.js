@@ -45,8 +45,22 @@ function findRepeatedDishes(meal, recentDishes) {
   );
 }
 
+// 前回選んだ献立のジャンル
+let lastMealStyle = null;
+
+// 献立のジャンルをランダムに選ぶ（前回と同じジャンルはなるべく避ける）
+function pickMealStyle() {
+  const styles = character.mealStyles;
+  const others = styles.filter(style => style !== lastMealStyle);
+  const candidates = others.length > 0 ? others : styles;
+
+  lastMealStyle = candidates[Math.floor(Math.random() * candidates.length)];
+  return lastMealStyle;
+}
+
 // 献立を1つ生成して記録する（失敗したら null）
 async function generateMeal(now, slot) {
+  const style = pickMealStyle();
   const recentDishes = getRecentDishes();
   const avoid = recentDishes.filter(dish => !isStaple(dish));
 
@@ -54,32 +68,39 @@ async function generateMeal(now, slot) {
     ? `・最近の献立に出た次の料理は使わない：${[...new Set(avoid)].join("、")}`
     : "";
 
+  // 作り直しても重なり続けたときに使う、最後に作った献立
+  let lastMeal = null;
+
   try {
     for (let attempt = 1; attempt <= MEAL_RETRIES; attempt++) {
       const text = await generateText(`${now.dateLabel}の${slot.name}の献立を1つ考えてください。
 
 ・具体的な料理名を使う
-・献立だけを「、」区切りで1行で出力する（例：主菜、主食、汁物）
+・献立だけを「、」区切りで1行で出力する（例：料理1、料理2、料理3）
 ・前置き、説明、絵文字は付けない
 ・季節に合った自然な献立にする
+・今回は「${style}」の献立にする
 ${avoidRule}`);
 
       const meal = text.split("\n")[0].replace(/^[・\-\s「]+|[」\s]+$/g, "");
 
       if (!meal) continue;
 
+      lastMeal = meal;
+
       const repeated = findRepeatedDishes(meal, recentDishes);
 
-      if (repeated.length === 0) {
-        saveMeal(now.dateKey, slot.name, meal);
-        console.log(`${slot.name}: 献立「${meal}」`);
-        return meal;
-      }
+      if (repeated.length === 0) break;
 
       console.log(`${slot.name}: 最近の献立と重なったので作り直し（${repeated.join("、")}）`);
     }
 
-    return null;
+    // 重なりが残っても、献立なしにはしない（食事の話題が消えてしまうため）
+    if (!lastMeal) return null;
+
+    saveMeal(now.dateKey, slot.name, lastMeal);
+    console.log(`${slot.name}: 献立「${lastMeal}」（${style}）`);
+    return lastMeal;
 
   } catch (error) {
     console.error(`${slot.name}: 献立生成失敗:`, error.message);
@@ -104,9 +125,10 @@ async function getMealRule(now) {
   return {
     hasMeal: true,
     rule: `【食事に関するルール】
-・今は${slot.name}の時間で、今日の${slot.name}は「${meal}」に決まっている
-・この献立を中心に、自然な時報にする
-・この献立を変更・追加しない`
+・今は${slot.name}の時間で、今日の${slot.name}は「${meal}」
+・${character.name}自身がこの${slot.name}を食べている、またはこれから食べる様子として書く（眺めるだけ・香りだけの描写にしない）
+・献立の料理名をすべて並べなくてよい。印象に残った1〜2品を中心にする
+・この献立にない料理を追加しない`
   };
 }
 

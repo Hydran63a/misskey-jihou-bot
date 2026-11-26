@@ -71,6 +71,10 @@ function loadCharacter() {
     hourlyHeader: profile.hourlyHeader || "🕐 {time}",
     hourlyMotif: profile.hourlyMotif || "",
     anniversaryTone: profile.anniversaryTone || "キャラクターらしい口調",
+    // 献立のジャンルの候補（毎回ここからランダムに1つ選ぶ。同じジャンルを並べれば出やすくなる）
+    mealStyles: Array.isArray(profile.mealStyles) && profile.mealStyles.length
+      ? profile.mealStyles
+      : ["和食", "洋食", "中華"],
     // 時間帯ごとの話題の候補（morning / daytime / evening / night）
     topics: profile.topics || {},
     fallbacks,
